@@ -11,8 +11,9 @@ const Hero = (props) => (
         Frontend <br /> Developer Jr.
       </SectionTitle>
       <SectionText>
-        Hi! my name is Eduardo lets create something together<br/>
-        <a href='#contact'> here </a>
+        Hi! my name is Eduardo, I'm a computer systems engineer currently
+        working on becoming in a fullstack Developer.
+        <br />
       </SectionText>
       {/* <Button href="#contact">
         Learn More

@@ -1,13 +1,66 @@
-import React from "react";
+import React, { useState } from "react";
 import { Section, SectionDivider, SectionText, SectionTitle} from '../../styles/GlobalComponents';
-import { useForm, ValidationError } from "@formspree/react";
+
 import { GridContainer, Form, InputGroup, Input, TextArea, Button } from "./ContactStyles";
+import axios from "axios";
 
 function Contact  () {
 
-  const [state, handleSubmit] = useForm("xvolkarw");
-  if (state.succeeded) {
-    return <p>Thanks for contact me</p>;
+const [status, setStatus] = useState({
+    submitted: false,
+    submitting: false,
+    info: { error: false, msg: null }
+  })
+  const [inputs, setInputs] = useState({
+    email: '',
+    message: ''
+  })
+  const handleServerResponse = (ok, msg) => {
+    if (ok) {
+      setStatus({
+        submitted: true,
+        submitting: false,
+        info: { error: false, msg: msg }
+      })
+      setInputs({
+        email: '',
+        message: ''
+      })
+    } else {
+      setStatus({
+        info: { error: true, msg: msg }
+      })
+    }
+  }
+  const handleOnChange = e => {
+    e.persist()
+    setInputs(prev => ({
+      ...prev,
+      [e.target.id]: e.target.value
+    }))
+    setStatus({
+      submitted: false,
+      submitting: false,
+      info: { error: false, msg: null }
+    })
+  }
+  const handleOnSubmit = e => {
+    e.preventDefault()
+    setStatus(prevStatus => ({ ...prevStatus, submitting: true }))
+    axios({
+      method: "POST",
+      url: "https://formspree.io/f/mjvlywrd",
+      data: inputs,
+    })
+      .then((response) => {
+        handleServerResponse(
+          true,
+          "Thank you, your message has been submitted."
+        );
+      })
+      .catch((error) => {
+        handleServerResponse(false, error.response.data.error);
+      });
   }
 
   return (
@@ -20,22 +73,28 @@ function Contact  () {
           Got a question or proposal? <br /> Go ahead{" "}
         </SectionText>
       </GridContainer>
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleOnSubmit}>
         <div className="form-row">
           <InputGroup>
-            <Input type="text" placeholder="Enter your name" />
-            <ValidationError
-              prefix="Message"
-              field="message"
-              errors={state.errors}
+            <Input
+              id="name"
+              type="text"
+              name="_name"
+              onChange={handleOnChange}
+              required
+              value={inputs.name}
+              placeholder="Enter your name"
             />
           </InputGroup>
           <InputGroup>
-            <Input type="email" placeholder="Enter your email address" />
-            <ValidationError
-              prefix="Message"
-              field="message"
-              errors={state.errors}
+            <Input
+              id="email"
+              type="email"
+              name="_replyto"
+              onChange={handleOnChange}
+              required
+              value={inputs.email}
+              placeholder="Enter your email address"
             />
           </InputGroup>
         </div>
@@ -43,20 +102,27 @@ function Contact  () {
           <InputGroup>
             <TextArea
               type="textarea"
+              id="message"
+              name="message"
+              onChange={handleOnChange}
+              required
+              value={inputs.message}
               placeholder="Hi, I think we need a design system for our products at Company X. How soon can you hop on to discuss this?"
-            />
-            <ValidationError
-              prefix="Message"
-              field="message"
-              errors={state.errors}
             />
           </InputGroup>
         </div>
-        <Button type="submit" disabled={state.submitting}>
-          Send
+        <Button type="submit" disabled={status.submitting}>
+          {!status.submitting
+            ? !status.submitted
+              ? "Submit"
+              : "Submitted"
+            : "Submitting..."}
         </Button>
       </Form>
-
+      {status.info.error && (
+        <div className="error">Error: {status.info.msg}</div>
+      )}
+      {!status.info.error && status.info.msg && <p>{status.info.msg}</p>}
       <SectionDivider colorAlt />
     </Section>
   );
